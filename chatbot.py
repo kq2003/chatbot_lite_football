@@ -18,8 +18,8 @@ app = Flask(__name__)
 CORS(app)  # This will enable CORS for all routes
 
 # Define the OpenAI API key
-os.environ['OPENAI_API_KEY'] = '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'
-openai_api_key = os.getenv("OPENAI_API_KEY", "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")
+os.environ['OPENAI_API_KEY'] = ' my key '
+openai_api_key = os.getenv("OPENAI_API_KEY", "my key ")
 
 # Define the docsearch the chatbot uses
 embeddings = OpenAIEmbeddings()
