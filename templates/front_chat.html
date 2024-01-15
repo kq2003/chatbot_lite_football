@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chatbot</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <style>
+        /* define how the page looks */
+        .message {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 20px;
+            width: fit-content;
+            max-width: 70%;
+        }
+
+        .bot {
+            background-color: #e5e5ea;
+            align-self: flex-start;
+            display: flex;
+            align-items: center;
+        }
+
+        .bot img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .user {
+            background-color: #0b93f6;
+            color: white;
+            align-self: flex-end;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+        .user img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+
+        .chat-container {
+            width: 300px;
+            height: 500px;
+            border: 1px solid #000;
+            padding: 10px;
+            overflow-y: scroll;
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container" id="chatContainer">
+        <!-- Messages will be appended here -->
+    </div>
+    
+    <input type="text" id="messageInput" placeholder="Type your message..."/>
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        // Add this variable to track if squad builder mode is active
+        var squadBuilderMode = false;
+        var squadBuilderQuestions = [
+            "Which team do you wish to coach?",
+            "Which formation do you wish to use?",
+            "Which coach do you want to emulate?"
+        ];
+        var squadBuilderAnswers = [];
+        var squadBuilderStep = 0;
+
+
+        // define the function to display message
+        function displayMessage(message) {
+        var chatContainer = document.getElementById('chatContainer');
+        var messageContainer = document.createElement('div');
+        messageContainer.classList.add('message-container', message.sender);
+
+        var messageDiv = document.createElement('div');
+        messageDiv.classList.add('message');
+        messageDiv.innerHTML = message.content;
+
+        var image = document.createElement('img');
+        image.src = `static/image_${message.sender}.png`; // Note the backticks (`) here
+
+
+        messageContainer.appendChild(message.sender === 'bot' ? image : messageDiv);
+        messageContainer.appendChild(message.sender === 'bot' ? messageDiv : image);
+
+        chatContainer.appendChild(messageContainer);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+
+        // Initial bot welcome message
+        displayMessage({ content: "Hello, manager!", sender: 'bot' });
+        displayMessage({ content: "For squad builder, type 1. For quiz, type 2. Otherwise, for free chat mode, type any question.", sender: 'bot' });
+
+        function sendMessage() {
+            var input = document.getElementById('messageInput');
+            var message = input.value;
+            input.value = '';
+
+            if (message) {
+                displayMessage({ content: message, sender: 'user' });
+
+                // enter squad builder mode
+                if (message == "1") {
+                    squadBuilderMode = true;
+                    sessionStorage.setItem('squadBuilderMode', 'true');
+                    displayMessage({ content: squadBuilderQuestions[squadBuilderStep], sender: 'bot' });
+                    return;
+                }
+
+                if (squadBuilderMode) {
+                    // Squad builder mode is active, process accordingly
+                    sessionStorage.setItem('squadBuilderAnswer_' + squadBuilderStep, message);
+                    squadBuilderStep += 1;
+
+                    if (squadBuilderStep < squadBuilderQuestions.length) {
+                        // Ask the next question in squad builder mode
+                        displayMessage({ content: squadBuilderQuestions[squadBuilderStep], sender: 'bot' });
+                        return;
+                    } else {
+                        // End of squad builder mode, reset
+                        squadBuilderMode = false;
+                        sessionStorage.removeItem('squadBuilderMode');
+                        squadBuilderStep = 0;
+                    }
+                }
+
+                $.ajax({
+                    url: 'http://localhost:5000/ask',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        question: message
+                    }),
+                    success: function(response) {
+                        var botMessage = response;
+                        displayMessage({ content: botMessage, sender: 'bot' });
+                    },
+
+                    error: function(error) {
+                        console.error('Error:', error);
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>
+
