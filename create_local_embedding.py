@@ -6,8 +6,8 @@ from langchain.text_splitter import CharacterTextSplitter
 from langchain.vectorstores import Chroma
 
 import os
-os.environ['OPENAI_API_KEY'] = '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'
-openai_api_key = os.getenv("OPENAI_API_KEY", "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")
+os.environ['OPENAI_API_KEY'] = 'my key'
+openai_api_key = os.getenv("OPENAI_API_KEY", "my key")
 
 loader = DirectoryLoader('corpus_new')
 documents = loader.load()
